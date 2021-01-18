@@ -1,0 +1,25 @@
+{
+  self {
+    username
+    email
+    employee {
+      id
+      name
+      post
+      phone
+      area
+      am {
+        id
+        name
+      }
+      rsm {
+        id
+        name
+      }
+      md {
+        id
+        name
+      }
+    }
+  }
+}

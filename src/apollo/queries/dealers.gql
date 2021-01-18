@@ -1,0 +1,13 @@
+query($data: JSON!) {
+  dealers(where: $data) {
+    name
+    id
+    index
+    address
+    phone
+    officer {
+      id
+      name
+    }
+  }
+}

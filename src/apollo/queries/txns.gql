@@ -1,0 +1,19 @@
+query Transactions($data: JSON!) {
+  transactions(where: $data) {
+    id
+    amount
+    mr_no
+    date
+    dealer {
+      id
+      name
+    }
+    officer {
+      id
+      name
+    }
+    summary
+    confirmed
+    createdAt
+  }
+}

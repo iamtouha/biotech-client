@@ -1,0 +1,12 @@
+{
+  products {
+    name
+    id
+    packs {
+      id
+      size
+      cash_rate
+      credit_rate
+    }
+  }
+}

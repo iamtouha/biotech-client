@@ -1,0 +1,20 @@
+query Invoices($data: JSON!) {
+  invoices(where: $data) {
+    id
+    index
+    confirmed
+    confirm_date
+    createdAt
+    cash_total
+    credit_total
+    dealer {
+      id
+      name
+      address
+    }
+    officer {
+      id
+      name
+    }
+  }
+}

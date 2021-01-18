@@ -1,0 +1,17 @@
+mutation createInvoiceItem($input: createInvoiceItemInput!) {
+  createInvoiceItem(input: $input) {
+    invoiceItem {
+      id
+      units
+      type
+      rate
+      pack {
+        product {
+          id
+          name
+        }
+        size
+      }
+    }
+  }
+}

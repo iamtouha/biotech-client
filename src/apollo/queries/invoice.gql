@@ -1,0 +1,34 @@
+query Invoice($id: ID!) {
+  invoice(id: $id) {
+    id
+    index
+    confirmed
+    confirm_date
+    createdAt
+    items {
+      id
+      rate
+      units
+      type
+      pack {
+        id
+        size
+        product {
+          id
+          name
+        }
+      }
+    }
+    dealer {
+      address
+      phone
+      id
+      index
+      name
+    }
+    officer {
+      id
+      name
+    }
+  }
+}
