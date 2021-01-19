@@ -2,6 +2,7 @@
   <q-page>
     <div class="q-pa-md">
       <q-form
+        v-if="!readOnly"
         ref="dealerForm"
         @submit="updateDealer"
         @reset="dealer = { id: null, name: '', address: '', phone: '' }"
@@ -56,7 +57,8 @@
         :data="dealers"
       >
         <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
+          <q-td v-if="readOnly" class="text-center">_</q-td>
+          <q-td v-else :props="props">
             <q-btn
               size="sm"
               round
@@ -180,18 +182,7 @@ export default {
       ]
     };
   },
-  computed: {
-    variables() {
-      const em = this.$store.getters["user/em"];
-      if (em.post === "officer") return { officer: em.id };
-      else if (em.post === "area_manager") return { officer: { am: em.id } };
-      else if (em.post === "regional_sales_manager")
-        return { officer: { rsm: em.id } };
-      else if (em.post === "managing_director")
-        return { officer: { md: em.id } };
-      return {};
-    }
-  },
+
   apollo: {
     dealers: {
       query: dealersQuery,
@@ -204,6 +195,21 @@ export default {
       error(err) {
         this.$showError(err);
       }
+    }
+  },
+  computed: {
+    readOnly() {
+      const em = this.$store.getters["user/em"];
+      return em.post !== "officer";
+    },
+    variables() {
+      const em = this.$store.getters["user/em"];
+      if (em.post === "officer") return { officer: em.id };
+      else if (em.post === "area_manager") return { officer: { am: em.id } };
+      else if (em.post === "regional_sales_manager")
+        return { officer: { rsm: em.id } };
+      else if (em.post === "director") return { officer: { md: em.id } };
+      return {};
     }
   },
   methods: {

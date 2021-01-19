@@ -9,7 +9,7 @@
       />
       <inv-item-input
         ref="invInput"
-        v-if="editable"
+        v-if="editable && !readOnly"
         :loading="loading"
         @additem="createInvoiceItem"
       />
@@ -22,7 +22,10 @@
         :data="invoice ? invoice.items : []"
       >
         <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
+          <q-td v-if="readOnly" class="text-right">
+            _
+          </q-td>
+          <q-td v-else :props="props">
             <q-btn
               :disable="tableActionOn"
               size="sm"
@@ -61,7 +64,7 @@
         :dealerId="invoice.dealer.id"
       />
 
-      <div v-if="invoice && !invoice.confirmed" class="row q-mt-lg">
+      <div v-if="!hideButton" class="row q-mt-lg">
         <q-btn
           @click="confirmDialog($t('approve-order?'), confirmInvoice)"
           :loading="loading"
@@ -162,6 +165,13 @@ export default {
         }
       );
       return sum;
+    },
+    readOnly() {
+      const post = this.$store.getters["user/em"].post;
+      return !(post === "officer" || post === "area_manager");
+    },
+    hideButton() {
+      return this.invoice?.confirmed || this.readOnly;
     },
     columns() {
       const columns = cloneDeep(this.headers);

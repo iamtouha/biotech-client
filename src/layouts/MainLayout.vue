@@ -86,7 +86,7 @@
     <q-page-container>
       <div class="row print-only text-center">
         <div class="col-12 page-header">
-          <img :src="logo" />
+          <logo></logo>
           <span>
             <h4
               style="text-align:center;"
@@ -105,7 +105,8 @@
 </template>
 
 <script>
-import dataUri from "assets/dataImg";
+import Logo from "components/Logo";
+
 const linksData = [
   { name: "home", path: "/", icon: "home" },
   { name: "products", path: "/products", icon: "grass" },
@@ -116,6 +117,7 @@ const linksData = [
 
 export default {
   name: "MainLayout",
+  components: { Logo },
   data() {
     return {
       leftDrawerOpen: false,
@@ -124,8 +126,7 @@ export default {
       langs: [
         { label: "English", value: "en" },
         { label: "বাংলা", value: "bn" }
-      ],
-      logo: dataUri
+      ]
     };
   },
 
@@ -171,10 +172,7 @@ export default {
   display: flex;
   align-content: center;
   justify-content: center;
-  img {
-    width: 70px;
-    margin-right: 10px;
-  }
+
   span {
     p {
       margin-bottom: 0;

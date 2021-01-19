@@ -173,7 +173,7 @@ export default {
       else if (em.post === "area_manager") return { officer: { am: em.id } };
       else if (em.post === "regional_sales_manager")
         return { officer: { rsm: em.id } };
-      else if (em.post === "managing_director")
+      else if (em.post === "director")
         return { officer: { md: em.id } };
       return {};
     }

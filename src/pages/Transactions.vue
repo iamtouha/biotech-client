@@ -5,6 +5,7 @@
         <q-tab name="confirmed" label="Confirmed"></q-tab>
         <q-tab
           name="pending"
+          :disable="!(post === 'area_manager' || post === 'officer')"
           :label="`pending (${pendingTxns.length})`"
         ></q-tab>
       </q-tabs>
@@ -44,7 +45,7 @@
           </q-table>
         </q-tab-panel>
         <q-tab-panel name="pending">
-          <div class="row shadow-2 q-pa-sm q-mb-md">
+          <div v-if="post === 'officer'" class="row shadow-2 q-pa-sm q-mb-md">
             <div class="col-12 col-sm-6 q-pa-sm">
               <q-select
                 filled
@@ -123,6 +124,7 @@
                   "
                 ></q-btn>
                 <q-btn
+                  v-if="post === 'area_manager'"
                   class="q-ml-sm"
                   :disable="tableActionOn"
                   size="sm"
@@ -210,10 +212,13 @@ export default {
       if (em.post === "officer") return { officer: em.id };
       else if (em.post === "area_manager") return { officer: { am: em.id } };
       else if (em.post === "regional_sales_manager")
-        return { officer: { rsm: em.id } };
-      else if (em.post === "managing_director")
-        return { officer: { md: em.id } };
+        return { officer: { rsm: em.id }, confirmed: true };
+      else if (em.post === "director")
+        return { officer: { md: em.id }, confirmed: true };
       return {};
+    },
+    post() {
+      return this.$store.getters["user/em"].post;
     }
   },
   apollo: {

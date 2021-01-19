@@ -82,7 +82,7 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <q-page-sticky position="bottom-right" :offset="[24, 24]">
+    <q-page-sticky v-if="isDirector" position="bottom-right" :offset="[24, 24]">
       <q-btn @click="newProd = true" fab icon="add" color="accent" />
     </q-page-sticky>
   </q-page>
@@ -112,6 +112,10 @@ export default {
           val.name.toLowerCase().includes(this.search.toLowerCase())
         );
       return sorted;
+    },
+    isDirector() {
+      const em = this.$store.getters["user/em"];
+      return em.post === "director";
     }
   },
   apollo: {
@@ -119,17 +123,7 @@ export default {
       query: Products,
       error(error) {
         console.log(error);
-        const { graphQLErrors, networkError, gqlError } = error;
-        if (networkError) {
-          this.$q.notify({ type: "negative", message: this.$t("netError") });
-        } else if (graphQLErrors?.length) {
-          this.$q.notify({
-            type: "negative",
-            message: graphQLErrors[0].message || "Something went wrong"
-          });
-        } else {
-          this.$q.notify({ type: "negative", message: error.message });
-        }
+        this.$q.notify({ type: "negative", message: error.message });
       }
     }
   },

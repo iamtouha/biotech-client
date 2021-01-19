@@ -1,13 +1,7 @@
 import { Cookies } from "quasar";
-import { createHttpLink } from "apollo-link-http";
 import { setContext } from "apollo-link-context";
-import { InMemoryCache } from "apollo-cache-inmemory";
 
 export function apolloClientBeforeCreate({ apolloClientConfigObj }) {
-  const httpLink = createHttpLink({
-    uri: "http://localhost:1337/graphql"
-  });
-
   const authLink = setContext((_, { headers }) => {
     // get the authentication token from local storage if it exists
     const token = Cookies.get("AUTH_TOKEN");
@@ -19,7 +13,8 @@ export function apolloClientBeforeCreate({ apolloClientConfigObj }) {
       }
     };
   });
-  apolloClientConfigObj.link = authLink.concat(httpLink);
+  const link = apolloClientConfigObj.link;
+  apolloClientConfigObj.link = authLink.concat(link);
 }
 
 let apollo = {};

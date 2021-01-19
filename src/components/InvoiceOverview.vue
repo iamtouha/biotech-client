@@ -1,5 +1,10 @@
 <template>
   <table class="text-left">
+    <tr v-if="$apollo.loading">
+      <td colspan="2">
+        <q-linear-progress indeterminate />
+      </td>
+    </tr>
     <caption class="q-mb-sm text-weight-bold text-left">
       {{
         $t("dealer-summary")
