@@ -37,7 +37,7 @@
           </q-form>
         </q-card-section>
       </q-card>
-      <q-card class="q-mt-lg">
+      <q-card v-if="false" class="q-mt-lg">
         <q-card-section class="text-h5">
           Update Password
         </q-card-section>

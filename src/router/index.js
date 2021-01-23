@@ -41,8 +41,7 @@ export default function({ store, ssrContext }) {
     }
   }
   Router.beforeEach((to, from, next) => {
-    const token = Cookies.get("AUTH_TOKEN");
-    console.log(token);
+    const token = Cookies.has("AUTH_TOKEN");
     if (token && initialLoad) {
       initialLoad = false;
       const userInfo = Cookies.get("USER_INFO");
