@@ -12,7 +12,13 @@
         />
         <q-toolbar-title>
           {{ $t("biotechag") }}
+          <!-- <q-circular-progress
+            color="white"
+            indeterminate
+            size="18px"
+          ></q-circular-progress> -->
         </q-toolbar-title>
+
         <q-btn @click="printPage" flat round dense icon="print" />
       </q-toolbar>
     </q-header>
@@ -40,7 +46,7 @@
           />
         </q-item-section>
       </q-item>
-      <q-item v-if="employee">
+      <q-item v-if="employee" to="/account">
         <q-item-section>
           <q-item-label class="text-h6">
             {{ employee.name }}
@@ -93,7 +99,7 @@
               :class="[$i18n.locale === 'bn' ? 'text-h5' : 'text-h4']"
               class="q-mb-none q-mt-sm"
             >
-              {{ $t("biotechagltd") }}
+              {{ $t("biotechag") }}
             </h4>
             <p class="subtitle-1 text-left">{{ $t("biotechaddress") }}</p>
           </span>
@@ -134,6 +140,7 @@ export default {
     employee() {
       return this.$store.getters["user/em"];
     },
+
     toggled: {
       get() {
         return this.$store.getters["alert/toggled"];
@@ -158,6 +165,7 @@ export default {
     },
     signOut() {
       this.$q.cookies.remove("AUTH_TOKEN");
+      this.$q.cookies.remove("USER_INFO");
       this.$store.commit("user/LOG_OUT");
       this.$router.push("/auth/login");
     }

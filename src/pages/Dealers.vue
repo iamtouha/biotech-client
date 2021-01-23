@@ -10,7 +10,7 @@
         <div class="row q-pa-sm shadow-2 print-hide">
           <div class="col-12 col-sm-6 q-pa-sm">
             <q-input
-              :rules="[v => v.length > 5 || $t('minimum-5-letter')]"
+              :rules="[v => v.length >= 5 || $t('minimum-5-letter')]"
               v-model="dealer.name"
               :label="$t('dealer-name')"
             ></q-input>
@@ -18,14 +18,14 @@
           <div class="col-12 col-sm-6 q-pa-sm">
             <q-input
               v-model="dealer.address"
-              :rules="[v => v.length > 5 || $t('minimum-5-letter')]"
+              :rules="[v => v.length >= 5 || $t('minimum-5-letter')]"
               :label="$t('dealer-address')"
             ></q-input>
           </div>
           <div class="col-12 col-sm-6 q-pa-sm">
             <q-input
               :maxlength="14"
-              :rules="[v => v.length > 5 || $t('minimum-11-letter')]"
+              :rules="[v => v.length >= 11 || $t('minimum-11-letter')]"
               v-model="dealer.phone"
               :label="$t('phone')"
             ></q-input>
@@ -36,7 +36,6 @@
               type="submit"
               :label="dealer.id ? $t('update') : $t('add-to-list')"
               class="bg-accent float-right"
-              @click="updateDealer"
             />
             <q-btn
               v-if="dealer.id"
@@ -112,6 +111,7 @@ const updateDealerQuery = gql`
     updateDealer(input: { where: { id: $id }, data: $data }) {
       dealer {
         id
+        index
         name
         officer {
           id
@@ -134,6 +134,7 @@ const createDealerQuery = gql`
     createDealer(input: { data: $data }) {
       dealer {
         id
+        index
         address
         phone
         name
@@ -186,7 +187,7 @@ export default {
   apollo: {
     dealers: {
       query: dealersQuery,
-      fetchPolicy: "network-only",
+      fetchPolicy: "network-first",
       variables() {
         return {
           data: this.variables
@@ -242,6 +243,7 @@ export default {
       this.loading = true;
       try {
         const { id, name, address, phone } = this.dealer;
+        if (!(name && address && phone)) return;
         if (id) {
           const { data } = await this.$apollo.mutate({
             mutation: updateDealerQuery,
@@ -252,19 +254,21 @@ export default {
           });
           const index = this.dealers.findIndex(dlr => dlr.id === id);
           this.dealers.splice(index, 1, data.updateDealer.dealer);
-        } else if (name && address && phone) {
+        } else {
+          const em = this.$store.getters["user/em"];
           const { data } = await this.$apollo.mutate({
             mutation: createDealerQuery,
             variables: {
-              data: { name, address, phone, officer: 1 }
+              data: { name, address, phone, officer: em.id }
             }
           });
           this.dealers.push(data.createDealer.dealer);
         }
         this.$refs.dealerForm.reset();
-        this.loading = false;
       } catch (error) {
         this.$showError(error);
+      } finally {
+        this.loading = false;
       }
     }
   }

@@ -1,16 +1,12 @@
 module.exports = function(ctx) {
   return {
     supportTS: false,
-    boot: ["i18n", "moment", "globals"],
+    boot: ["i18n", "moment", "globals", "axios"],
     css: ["app.scss"],
     extras: ["roboto-font", "material-icons"],
 
     build: {
       vueRouterMode: "hash",
-      env: {
-        GRAPHQL_URI: "https://biotechav.herokuapp.com/graphql"
-      },
-
       chainWebpack(chain, { isServer, isClient }) {
         chain.module
           .rule("gql")

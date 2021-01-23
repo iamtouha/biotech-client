@@ -1,42 +1,27 @@
 <template>
-  <table class="text-left">
-    <tr v-if="$apollo.loading">
-      <td colspan="2">
-        <q-linear-progress indeterminate />
-      </td>
-    </tr>
-    <caption class="q-mb-sm text-weight-bold text-left">
-      {{
-        $t("dealer-summary")
-      }}
-    </caption>
-    <tr>
-      <td>{{ $t("total-cash") }}</td>
-      <td class="text-right">{{ $n(overview.cash_total) + $t("tk") }}</td>
-    </tr>
-    <tr>
-      <td>{{ $t("total-credit") }}</td>
-      <td class="text-right">{{ $n(overview.credit_total) + $t("tk") }}</td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <hr class="q-my-0" />
-      </td>
-    </tr>
-    <tr>
-      <th>{{ $t("subtotal") }}</th>
-      <th class="text-right">
-        {{ $n(overview.cash_total + overview.credit_total) + $t("tk") }}
-      </th>
-    </tr>
-  </table>
+  <tr>
+    <td v-if="$apollo.loading">
+      <q-circular-progress indeterminate></q-circular-progress>
+    </td>
+    <td v-if="!$apollo.loading">
+      {{ $t("total-cash") }} {{ $n(overview.cash_total) + $t("tk") }}
+    </td>
+    <td v-if="!$apollo.loading">
+      {{ $t("total-credit") }} {{ $n(overview.credit_total) + $t("tk") }}
+    </td>
+    <th v-if="!$apollo.loading">
+      = {{ $n(overview.cash_total + overview.credit_total) + $t("tk") }}
+    </th>
+  </tr>
 </template>
 
 <script>
 import gql from "graphql-tag";
 const query = gql`
-  query dealerSum($dealerId: ID!) {
-    invoicesConnection(where: { confirmed: true, dealer: $dealerId }) {
+  query dealerSum($dealerId: ID!, $date: Date!) {
+    invoicesConnection(
+      where: { confirmed: true, dealer: $dealerId, confirm_date_lte: $date }
+    ) {
       aggregate {
         sum {
           cash_total
@@ -44,7 +29,9 @@ const query = gql`
         }
       }
     }
-    transactionsConnection(where: { confirmed: true, dealer: $dealerId }) {
+    transactionsConnection(
+      where: { confirmed: true, dealer: $dealerId, date_lte: $date }
+    ) {
       aggregate {
         sum {
           amount
@@ -56,7 +43,8 @@ const query = gql`
 export default {
   name: "InvoiceOverview",
   props: {
-    dealerId: String
+    dealerId: String,
+    date: String
   },
   data() {
     return {
@@ -68,7 +56,8 @@ export default {
       query,
       variables() {
         return {
-          dealerId: this.dealerId
+          dealerId: this.dealerId,
+          date: this.date
         };
       },
       update({
@@ -100,6 +89,6 @@ export default {
 
 <style scoped>
 table {
-  min-width: 250px;
+  min-width: 340px;
 }
 </style>

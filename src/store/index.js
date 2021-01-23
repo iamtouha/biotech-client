@@ -8,12 +8,26 @@ Vue.use(Vuex);
 
 export default function(/* { ssrContext } */) {
   const Store = new Vuex.Store({
+    state() {
+      return {
+        appLoading: false
+      };
+    },
+    getters: {
+      appLoading: ({ appLoading }) => appLoading
+    },
+    mutations: {
+      APP_LOADING(state) {
+        state.appLoading = true;
+      },
+      APP_LOADED(state) {
+        state.appLoading = false;
+      }
+    },
     modules: {
       user,
       alert
     },
-    // enable strict mode (adds overhead!)
-    // for dev mode only
     strict: process.env.DEBUGGING
   });
 

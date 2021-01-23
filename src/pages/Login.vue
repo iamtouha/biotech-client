@@ -61,6 +61,7 @@ export default {
     login: async function() {
       this.loading = true;
       try {
+        // log in
         const mutation = this.$apollo.mutate({
           mutation: Login,
           fetchPolicy: "no-cache",
@@ -71,12 +72,16 @@ export default {
         const resp = await mutation;
         const token = resp.data.login?.jwt;
         this.$q.cookies.set("AUTH_TOKEN", token, { expires: "15d" });
+
+        // fetch and save userInfo
         const { data } = await this.$apollo.query({
           query: Employee,
-          fetchPolicy: "no-cache",
+          fetchPolicy: "network-first"
         });
+        this.$store.dispatch("user/getUserInfo", data.self);
+        const userData = JSON.stringify(data.self);
+        this.$q.cookies.set("USER_INFO", userData, { expires: "15d" });
 
-        await this.$store.dispatch("user/getUserInfo", data.self);
         this.$q.notify({ message: "Log in successful", type: "positive" });
         this.$router.push("/");
       } catch (error) {

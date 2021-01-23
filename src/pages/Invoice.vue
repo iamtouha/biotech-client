@@ -16,6 +16,7 @@
       <q-table
         dense
         flat
+        hide-bottom
         :loading="$apollo.loading"
         :rows-per-page-options="[invoice ? invoice.items.length : 0]"
         :columns="columns"
@@ -57,12 +58,23 @@
               = {{ $n(summary.cash + summary.credit) }}{{ $t("tk") }}
             </q-th>
           </q-tr>
+
+          <!-- invoice overview -->
+          <q-tr v-if="invoice && invoice.confirmed" style="text-align:left;">
+            <q-th>
+              <p class="q-mt-sm q-mb-none">
+                {{ $t("dealer-summary") }}
+              </p>
+            </q-th>
+          </q-tr>
+          <invoice-overview
+            v-if="invoice && invoice.confirmed"
+            :dealerId="invoice.dealer.id"
+            :date="invoice.confirm_date"
+          />
+          <!-- invoice overview end -->
         </template>
       </q-table>
-      <invoice-overview
-        v-if="invoice && invoice.confirmed"
-        :dealerId="invoice.dealer.id"
-      />
 
       <div v-if="!hideButton" class="row q-mt-lg">
         <q-btn
@@ -171,7 +183,7 @@ export default {
       return !(post === "officer" || post === "area_manager");
     },
     hideButton() {
-      return this.invoice?.confirmed || this.readOnly;
+      return !this.invoice || this.invoice?.confirmed || this.readOnly;
     },
     columns() {
       const columns = cloneDeep(this.headers);

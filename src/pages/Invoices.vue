@@ -2,11 +2,11 @@
   <q-page>
     <div class="q-px-md q-pa-sm">
       <q-tabs align="left" class="print-hide" v-model="tab">
-        <q-tab name="invoices" :label="$t('invoices')" />
         <q-tab
           name="orders"
           :label="`${$t('orders')} (${pendingInv.length})`"
         />
+        <q-tab name="invoices" :label="$t('invoices')" />
       </q-tabs>
 
       <q-tab-panels v-model="tab">
@@ -50,7 +50,7 @@
           </q-table>
         </q-tab-panel>
         <q-tab-panel name="orders">
-          <div class="q-pa-md d-flex newInvInit">
+          <div v-if="post === 'officer'" class="q-pa-md d-flex newInvInit">
             <q-select
               filled
               style="min-width:270px;"
@@ -93,7 +93,7 @@ export default {
   name: "Invoices",
   data() {
     return {
-      tab: "invoices",
+      tab: "orders",
       fullscreen: false,
       newInvLoading: false,
       invoices: [],
@@ -161,6 +161,9 @@ export default {
     }
   },
   computed: {
+    post() {
+      return this.$store.getters["user/em"].post;
+    },
     confirmedInv() {
       return this.invoices.filter(inv => inv.confirmed === true);
     },
@@ -172,13 +175,17 @@ export default {
       if (em.post === "officer") return { officer: em.id };
       else if (em.post === "area_manager") return { officer: { am: em.id } };
       else if (em.post === "regional_sales_manager")
-        return { officer: { rsm: em.id } };
+        return { officer: { rsm: em.id }, confirmed: true };
       else if (em.post === "director")
-        return { officer: { md: em.id } };
+        return { officer: { md: em.id }, confirmed: true };
       return {};
     }
   },
-
+  created() {
+    if (!["area_manager", "officer"].includes(this.post)) {
+      this.tab = "invoices";
+    }
+  },
   methods: {
     openInv(_, row) {
       this.$router.push("/invoices/" + row.id);

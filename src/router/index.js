@@ -8,6 +8,7 @@ import routes from "./routes";
 
 Vue.use(VueRouter);
 
+let initialLoad = true;
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -27,28 +28,30 @@ export default function({ store, ssrContext }) {
 
   async function fetchData() {
     try {
-      const user = store.getters["user/user"];
-      if (user) return user;
       const { data } = await apollo.query({
         query: Employee,
-        fetchPolicy: "no-cache"
+        fetchPolicy: "network-first"
       });
+      Cookies.set("USER_INFO", JSON.stringify(data.self), { expires: "15d" });
+
       store.dispatch("user/getUserInfo", data.self);
-      return data.self;
+      console.log("Employee data loaded");
     } catch (error) {
-      return error;
+      Notify.create({ type: "negative", message: error.message });
     }
   }
   Router.beforeEach((to, from, next) => {
     const token = Cookies.get("AUTH_TOKEN");
+    console.log(token);
+    if (token && initialLoad) {
+      initialLoad = false;
+      const userInfo = Cookies.get("USER_INFO");
+      store.dispatch("user/getUserInfo", userInfo);
+      fetchData();
+    }
     const requiresAuth = to.meta?.auth;
     if (requiresAuth && token) {
-      fetchData()
-        .then(() => next())
-        .catch(() => {
-          Notify.create({ type: "negative", message: error.message });
-          next({ name: "login" });
-        });
+      next();
     } else if (requiresAuth && !token) {
       next({ name: "login" });
     } else next();

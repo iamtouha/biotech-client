@@ -122,8 +122,7 @@ export default {
     products: {
       query: Products,
       error(error) {
-        console.log(error);
-        this.$q.notify({ type: "negative", message: error.message });
+        this.$showError(error);
       }
     }
   },

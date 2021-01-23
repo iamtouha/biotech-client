@@ -237,10 +237,14 @@ export default {
   apollo: {
     product: {
       query: productQuery,
+      fetchPolicy: "network-first",
       variables() {
         return {
           id: this.$route.params.id
         };
+      },
+      error(err) {
+        console.log("err");
       }
     }
   },
