@@ -1,18 +1,23 @@
 <template>
-  <tr>
-    <td v-if="$apollo.loading">
-      <q-circular-progress indeterminate></q-circular-progress>
-    </td>
-    <td v-if="!$apollo.loading">
-      {{ $t("total-cash") }} {{ $n(overview.cash_total) + $t("tk") }}
-    </td>
-    <td v-if="!$apollo.loading">
-      {{ $t("total-credit") }} {{ $n(overview.credit_total) + $t("tk") }}
-    </td>
-    <th v-if="!$apollo.loading">
-      = {{ $n(overview.cash_total + overview.credit_total) + $t("tk") }}
-    </th>
-  </tr>
+  <q-tr class="text-right" style="font-weight:600;">
+    <q-td colspan="2">
+      {{ $t("dealer-summary") }}
+      <q-circular-progress
+        v-if="$apollo.loading"
+        indeterminate
+      ></q-circular-progress>
+    </q-td>
+    <q-td colspan="2">
+      {{ $t("total-cash") }} = {{ $n(overview.cash_total) + $t("tk") }}
+    </q-td>
+    <q-td>
+      {{ $t("total-credit") }} = {{ $n(overview.credit_total) + $t("tk") }}
+    </q-td>
+    <q-td>
+      {{ this.$t("subtotal") }} =
+      {{ $n(overview.cash_total + overview.credit_total) + $t("tk") }}
+    </q-td>
+  </q-tr>
 </template>
 
 <script>
@@ -48,7 +53,10 @@ export default {
   },
   data() {
     return {
-      overview: {}
+      overview: {
+        cash_total: 0,
+        credit_total: 0
+      }
     };
   },
   apollo: {

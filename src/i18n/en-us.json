@@ -13,7 +13,7 @@
   "rate": "rate",
   "pack": "pack",
   "type": "type",
-  "total": "total",
+  "total": "Total",
   "cash": "cash",
   "credit": "credit",
   "summary": "Summary",
@@ -43,7 +43,7 @@
   "delete": "Delete",
   "update": "Update",
   "cancel": "Cancel",
-  "delete-order?": "Approve this order?",
+  "delete-order?": "Delete this order?",
   "delete-dealer?": "Delete this Dealer?",
   "minimum-5-letter": "Minimum 5 Characters",
   "minimum-11-letter": "Minimum 11 Characters",
@@ -55,5 +55,7 @@
   "credit-rate": "Credit Rate",
   "new": "New",
   "product-name": "Product Name",
-  "size": "Size"
+  "size": "Size",
+  "incharge": "In-Charge",
+  "customer": "Customer"
 }

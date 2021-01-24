@@ -76,7 +76,7 @@ export default {
         // fetch and save userInfo
         const { data } = await this.$apollo.query({
           query: Employee,
-          fetchPolicy: "network-first"
+          fetchPolicy: "no-cache"
         });
         this.$store.dispatch("user/getUserInfo", data.self);
         const userData = JSON.stringify(data.self);

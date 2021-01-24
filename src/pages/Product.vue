@@ -237,7 +237,7 @@ export default {
   apollo: {
     product: {
       query: productQuery,
-      fetchPolicy: "network-first",
+      fetchPolicy: "network-only",
       variables() {
         return {
           id: this.$route.params.id

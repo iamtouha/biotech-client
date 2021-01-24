@@ -2,12 +2,12 @@
   <q-page>
     <div class="q-pa-md">
       <q-tabs align="left" v-model="tab">
-        <q-tab name="confirmed" label="Confirmed"></q-tab>
         <q-tab
           name="pending"
           :disable="!(post === 'area_manager' || post === 'officer')"
           :label="`pending (${pendingTxns.length})`"
         ></q-tab>
+        <q-tab name="confirmed" label="Confirmed"></q-tab>
       </q-tabs>
       <q-tab-panels v-model="tab">
         <q-tab-panel name="confirmed">
@@ -41,6 +41,22 @@
                   </q-list>
                 </q-menu>
               </q-btn>
+            </template>
+            <template v-slot:body-cell-actions="props">
+              <td style="text-align:center;" :props="props">
+                <q-btn
+                  v-if="post === 'area_manager'"
+                  :disable="tableActionOn"
+                  size="sm"
+                  round
+                  color="negative"
+                  icon="delete"
+                  @click="
+                    confirmDialog('Delete transaction?', delTxn, props.row.id)
+                  "
+                ></q-btn>
+                <span v-else>-</span>
+              </td>
             </template>
           </q-table>
         </q-tab-panel>
@@ -158,7 +174,7 @@ export default {
   name: "Transactions",
   data() {
     return {
-      tab: "confirmed",
+      tab: "pending",
       fullscreen: false,
       tableActionOn: false,
       loading: false,
@@ -181,7 +197,8 @@ export default {
         {
           label: this.$t("date"),
           field: v => this.$dt(v.date, this.$i18n.locale)
-        }
+        },
+        { label: this.$t("actions"), name: "actions" }
       ],
       pendingHeaders: [
         { label: this.$t("receipt_no"), field: "mr_no" },

@@ -30,7 +30,7 @@ export default function({ store, ssrContext }) {
     try {
       const { data } = await apollo.query({
         query: Employee,
-        fetchPolicy: "network-first"
+        fetchPolicy: "network-only"
       });
       Cookies.set("USER_INFO", JSON.stringify(data.self), { expires: "15d" });
 
@@ -41,14 +41,14 @@ export default function({ store, ssrContext }) {
     }
   }
   Router.beforeEach((to, from, next) => {
-    const token = Cookies.has("AUTH_TOKEN");
-    if (token && initialLoad) {
+    const token = Cookies.get("AUTH_TOKEN");
+    const requiresAuth = to.meta?.auth;
+    const userInfo = Cookies.get("USER_INFO");
+    if (token && initialLoad && requiresAuth) {
       initialLoad = false;
-      const userInfo = Cookies.get("USER_INFO");
       store.dispatch("user/getUserInfo", userInfo);
       fetchData();
     }
-    const requiresAuth = to.meta?.auth;
     if (requiresAuth && token) {
       next();
     } else if (requiresAuth && !token) {

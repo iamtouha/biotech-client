@@ -52,12 +52,13 @@
         flat
         dense
         :loading="$apollo.loading"
+        :rows-per-page-options="[20, 0]"
         :columns="columns"
         :data="dealers"
       >
         <template v-slot:body-cell-actions="props">
           <q-td v-if="readOnly" class="text-center">_</q-td>
-          <q-td v-else :props="props">
+          <q-td v-else class="text-left" :props="props">
             <q-btn
               size="sm"
               round
@@ -68,7 +69,7 @@
             />
             <q-btn
               v-if="
-                !props.row.invoices.length || !props.row.transactions.length
+                !(props.row.invoices.length || props.row.transactions.length)
               "
               size="sm"
               round
@@ -99,9 +100,11 @@ const dealersQuery = gql`
       }
       invoices {
         id
+        index
       }
       transactions {
         id
+        mr_no
       }
     }
   }
@@ -187,7 +190,7 @@ export default {
   apollo: {
     dealers: {
       query: dealersQuery,
-      fetchPolicy: "network-first",
+      fetchPolicy: "network-only",
       variables() {
         return {
           data: this.variables

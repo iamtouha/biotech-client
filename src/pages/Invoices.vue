@@ -138,7 +138,7 @@ export default {
   apollo: {
     invoices: {
       query: Invoices,
-      fetchPolicy: "no-cache",
+      fetchPolicy: "network-only",
       variables() {
         return {
           data: this.variables
@@ -150,6 +150,7 @@ export default {
     },
     dealers: {
       query: Dealers,
+      fetchPolicy: "network-only",
       variables() {
         return {
           data: this.variables

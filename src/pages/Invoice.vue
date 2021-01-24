@@ -48,7 +48,7 @@
         </template>
         <template v-slot:bottom-row>
           <q-tr style="text-align:right;">
-            <q-th colspan="2" style="text-align:left;">{{ $t("total") }}</q-th>
+            <q-th colspan="2">{{ $t("total") }}</q-th>
             <q-th>{{ $n(summary.units) }} </q-th>
             <q-th> {{ $t("cash") }} {{ $n(summary.cash) }}{{ $t("tk") }} </q-th>
             <q-th
@@ -60,13 +60,7 @@
           </q-tr>
 
           <!-- invoice overview -->
-          <q-tr v-if="invoice && invoice.confirmed" style="text-align:left;">
-            <q-th>
-              <p class="q-mt-sm q-mb-none">
-                {{ $t("dealer-summary") }}
-              </p>
-            </q-th>
-          </q-tr>
+
           <invoice-overview
             v-if="invoice && invoice.confirmed"
             :dealerId="invoice.dealer.id"
@@ -76,27 +70,31 @@
         </template>
       </q-table>
 
-      <div v-if="!hideButton" class="row q-mt-lg">
+      <div class="row q-mt-lg print-hide">
         <q-btn
+          @click="confirmDialog($t('delete-order?'), dltInvoice)"
+          v-if="
+            post === 'area_manager' ||
+              (post === 'officer' && invoice && !invoice.confirmed)
+          "
+          :disable="loading"
+          color="negative"
+          :label="$t('delete')"
+        />
+        <q-btn
+          v-if="post === 'area_manager' && invoice && !invoice.confirmed"
           @click="confirmDialog($t('approve-order?'), confirmInvoice)"
           :loading="loading"
           :disable="invoice && !invoice.items.length"
           color="primary"
-          class="q-mr-sm"
+          class="q-ml-sm"
           :label="$t('confirm')"
-        />
-        <q-btn
-          @click="confirmDialog($t('delete-order?'), dltInvoice)"
-          :disable="loading"
-          color="negative"
-          class=""
-          :label="$t('delete')"
         />
       </div>
       <div class="row print-only signature-area">
         <div class="col-4">
           <span>
-            {{ $t("area_manager") }}
+            {{ $t("customer") }}
           </span>
         </div>
         <div class="col-4">
@@ -106,7 +104,7 @@
         </div>
         <div class="col-4">
           <span>
-            {{ $t("dealer") }}
+            {{ $t("incharge") }}
           </span>
         </div>
       </div>
@@ -177,6 +175,9 @@ export default {
         }
       );
       return sum;
+    },
+    post() {
+      return this.$store.getters["user/em"]?.post;
     },
     readOnly() {
       const post = this.$store.getters["user/em"].post;
@@ -303,8 +304,6 @@ export default {
     dltInvoice: async function() {
       try {
         this.loading = true;
-        const promises = this.invoice.items.map(item => this.delItem(item.id));
-        await Promise.all(promises);
         await this.$apollo.mutate({
           mutation: gql`
             mutation delInv($id: ID!) {

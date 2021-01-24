@@ -121,6 +121,7 @@ export default {
   apollo: {
     products: {
       query: Products,
+      fetchPolicy: "network-only",
       error(error) {
         this.$showError(error);
       }
