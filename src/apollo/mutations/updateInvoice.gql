@@ -1,0 +1,36 @@
+mutation updateInv($id: ID!, $data: editInvoiceInput!) {
+  updateInvoice(input: { where: { id: $id }, data: $data }) {
+    invoice {
+      id
+      index
+      confirmed
+      confirmed_at
+      createdAt
+      items {
+        id
+        rate
+        units
+        type
+        pack {
+          id
+          size
+          product {
+            id
+            name
+          }
+        }
+      }
+      dealer {
+        address
+        phone
+        id
+        index
+        name
+      }
+      officer {
+        id
+        name
+      }
+    }
+  }
+}

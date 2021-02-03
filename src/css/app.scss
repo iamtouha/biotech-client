@@ -14,6 +14,9 @@ $lg-breakpoint: 1920px;
   margin-right: auto;
   margin-left: auto;
 }
+.flex-end {
+  justify-content: flex-end;
+}
 
 @media (min-width: $xs-breakpoint) {
   .container,

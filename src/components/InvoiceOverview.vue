@@ -23,9 +23,9 @@
 <script>
 import gql from "graphql-tag";
 const query = gql`
-  query dealerSum($dealerId: ID!, $date: Date!) {
+  query dealerSum($dealerId: ID!, $date: DateTime!) {
     invoicesConnection(
-      where: { confirmed: true, dealer: $dealerId, confirm_date_lte: $date }
+      where: { confirmed: true, dealer: $dealerId, confirmed_at_lte: $date }
     ) {
       aggregate {
         sum {

@@ -116,7 +116,7 @@ export default {
         },
         {
           label: this.$t("date"),
-          field: row => this.$dt(row.confirm_date, this.$i18n.locale)
+          field: row => this.$dt(row.confirmed_at, this.$i18n.locale)
         },
         { label: this.$t("officer"), field: row => row.officer.name }
       ],

@@ -31,7 +31,7 @@ module.exports = function(ctx) {
 
     devServer: {
       https: false,
-      port: 8080,
+      port: 3300,
       open: true
     },
 

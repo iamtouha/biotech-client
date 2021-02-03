@@ -8,7 +8,7 @@ export default function(/* { app, router, store, ssrContext, urlPath, redirect }
 
     dev: {
       httpLinkConfig: {
-        uri: process.env.GRAPHQL_URI || "http://localhost:1337/graphql"
+        uri: process.env.GRAPHQL_URI || "http://localhost:1335/graphql"
       }
     },
 

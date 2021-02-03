@@ -6,6 +6,7 @@
           use-input
           filled
           v-model="product"
+          :loading="$apollo.loading"
           :label="$t('select-product')"
           @filter="filterFn"
           :input-debounce="100"
@@ -26,6 +27,7 @@
       </div>
       <div class="col-12 col-sm-4 q-pa-sm">
         <q-btn-toggle
+          class="no-shadow bg-grey-3"
           v-model="item.type"
           :options="[
             { label: $t('cash'), value: 'cash' },
@@ -52,13 +54,16 @@
       </div>
       <div class="col-12 q-pa-sm">
         <p class="float-left">
-          {{ $t("total") }}: {{ $n(item.rate * item.units) }}{{ $t("tk") }}
+          {{ $t("total") }}({{ $t("tk") }}): {{ $n(item.rate * item.units) }}
         </p>
         <q-btn
           type="submit"
           :label="$t('add-to-list')"
+          :disable="!valid"
+          flat
           :loading="loading"
-          class="bg-accent float-right"
+          color="accent"
+          class="float-right bg-grey-3"
         />
       </div>
     </div>
@@ -66,7 +71,6 @@
 </template>
 
 <script>
-import cloneDeep from "lodash.clonedeep";
 import Products from "src/apollo/queries/products.gql";
 
 export default {
@@ -96,6 +100,10 @@ export default {
       return this.products.filter(pd =>
         pd.name.toLowerCase().includes(this.search.toLowerCase())
       );
+    },
+    valid() {
+      const { pack, rate, units, type } = this.item;
+      return !!(pack && rate > 0 && units > 0 && type);
     }
   },
   watch: {
@@ -103,7 +111,7 @@ export default {
       deep: true,
       handler(val) {
         if (this.freeze) return;
-        if (val) {
+        else if (val) {
           this.item.pack = val.id;
           this.item.rate =
             this.item.type === "cash"
@@ -137,17 +145,7 @@ export default {
     products: {
       query: Products,
       error(error) {
-        const { graphQLErrors, networkError, gqlError } = error;
-        if (networkError) {
-          this.$q.notify({ type: "negative", message: this.$t("netError") });
-        } else if (graphQLErrors?.length) {
-          this.$q.notify({
-            type: "negative",
-            message: graphQLErrors[0].message || "Something went wrong"
-          });
-        } else {
-          this.$q.notify({ type: "negative", message: error.message });
-        }
+        this.$showError(error);
       }
     }
   },
@@ -158,10 +156,18 @@ export default {
       });
     },
     submitItem() {
-      const { pack, rate, units, type } = this.item;
-      if (pack && rate > 0 && units > 0 && type) {
-        this.$emit("additem", { pack, rate: +rate, units: +units, type });
-        this.size = null;
+      const { rate, units, type } = this.item;
+      if (this.valid) {
+        this.$emit("additem", {
+          pack: {
+            ...this.pack,
+            product: this.product
+          },
+          rate: +rate,
+          units: +units,
+          type
+        });
+        this.pack = null;
       } else {
         this.$q.notify({
           type: "negative",
@@ -181,7 +187,7 @@ export default {
         units
       } = item;
       this.product = this.products.find(pd => pd.id === productId);
-      this.size = this.product.packs.find(sz => sz.id === id);
+      this.pack = this.product.packs.find(sz => sz.id === id);
       this.item.rate = rate;
       this.item.type = type;
       this.item.units = units;

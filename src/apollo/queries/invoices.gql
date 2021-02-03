@@ -3,7 +3,7 @@ query Invoices($data: JSON!) {
     id
     index
     confirmed
-    confirm_date
+    confirmed_at
     createdAt
     cash_total
     credit_total

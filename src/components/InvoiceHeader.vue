@@ -24,11 +24,11 @@
           <td>{{ $t("order-date") }}</td>
           <td>:&nbsp;{{ $dt(invoice.createdAt, $i18n.locale) }}</td>
         </tr>
-        <tr class="print-hide" v-if="editable || invoice.confirm_date">
+        <tr class="print-hide" v-if="editable || invoice.confirmed_at">
           <td>{{ $t("date") }}</td>
           <td v-if="editable">
             <q-btn outline color="primary"
-              >{{ $dt(date, $i18n.locale) }}
+              >{{ $dt(value, $i18n.locale) }}
               <q-popup-proxy transition-show="scale" transition-hide="scale">
                 <q-date
                   emit-immediately
@@ -39,14 +39,26 @@
                   v-model="date"
                 >
                   <div class="row items-center justify-end q-gutter-sm">
-                    <q-btn label="Close" color="primary" flat v-close-popup />
+                    <q-btn
+                      label="cancel"
+                      flat
+                      v-close-popup
+                      @click="cancelVal"
+                    />
+                    <q-btn
+                      label="Okay"
+                      color="primary"
+                      flat
+                      v-close-popup
+                      @click="inputVal"
+                    />
                   </div>
                 </q-date>
               </q-popup-proxy>
             </q-btn>
           </td>
-          <td v-else-if="invoice.confirm_date">
-            :&nbsp;{{ $dt(invoice.confirm_date, $i18n.locale) }}
+          <td v-else-if="invoice.confirmed_at">
+            :&nbsp;{{ $dt(invoice.confirmed_at, $i18n.locale) }}
           </td>
         </tr>
       </table>
@@ -61,9 +73,9 @@
           <td>{{ $t("order-date") }}</td>
           <td>:&nbsp;{{ $dt(invoice.createdAt, $i18n.locale) }}</td>
         </tr>
-        <tr v-if="invoice.confirm_date">
+        <tr v-if="invoice.confirmed_at">
           <td>{{ $t("date") }}</td>
-          <td>:&nbsp;{{ $dt(invoice.confirm_date, $i18n.locale) }}</td>
+          <td>:&nbsp;{{ $dt(invoice.confirmed_at, $i18n.locale) }}</td>
         </tr>
       </table>
     </div>
@@ -75,7 +87,8 @@ export default {
   name: "InvoiceHeader",
   props: {
     invoice: Object,
-    editable: Boolean
+    editable: Boolean,
+    value: String
   },
 
   data: () => ({
@@ -86,17 +99,18 @@ export default {
       return this.$d(new Date(), "short", "bn");
     }
   },
-  watch: {
-    date(val) {
+
+  created() {
+    if (this.editable) {
       this.inputVal();
     }
-  },
-  created() {
-    this.inputVal();
   },
   methods: {
     inputVal() {
       this.$emit("input", this.$moment(this.date).format("YYYY-MM-DD"));
+    },
+    cancelVal() {
+      this.date = this.value;
     }
   }
 };

@@ -3,7 +3,7 @@ query Invoice($id: ID!) {
     id
     index
     confirmed
-    confirm_date
+    confirmed_at
     createdAt
     items {
       id

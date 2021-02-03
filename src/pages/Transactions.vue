@@ -49,6 +49,7 @@
                   :disable="tableActionOn"
                   size="sm"
                   round
+                  flat
                   color="negative"
                   icon="delete"
                   @click="
@@ -67,18 +68,18 @@
                 filled
                 style="min-width:270px;"
                 :options="dealers"
-                v-model="dealer"
+                v-model="txn.dealer"
                 option-label="name"
                 :label="$t('select-dealer')"
               ></q-select>
             </div>
             <div class="col-12 col-sm-6 q-pa-sm">
-              <q-input filled v-model="summary" :label="$t('summary')" />
+              <q-input filled v-model="txn.summary" :label="$t('summary')" />
             </div>
             <div class="col-6 col-sm-4 q-pa-sm">
               <q-input
                 filled
-                v-model="amount"
+                v-model="txn.amount"
                 type="number"
                 :label="$t('amount')"
               />
@@ -86,14 +87,14 @@
             <div class="col-6 col-sm-4 q-pa-sm">
               <q-input
                 filled
-                v-model="mr_no"
+                v-model="txn.mr_no"
                 type="number"
                 :label="$t('receipt_no')"
               />
             </div>
             <div class="col-6 col-sm-4 q-pa-sm">
               <q-btn class="q-mt-sm" outline color="primary">
-                {{ $t("date") }}: {{ $dt(date, $i18n.locale) }}
+                {{ $t("date") }}: {{ $dt(txn.date, $i18n.locale) }}
                 <q-popup-proxy transition-show="scale" transition-hide="scale">
                   <q-date
                     emit-immediately
@@ -104,7 +105,19 @@
                     v-model="date"
                   >
                     <div class="row items-center justify-end q-gutter-sm">
-                      <q-btn label="Close" color="primary" flat v-close-popup />
+                      <q-btn
+                        label="Cancel"
+                        @click="date = txn.date"
+                        flat
+                        v-close-popup
+                      />
+                      <q-btn
+                        label="Okay"
+                        @click="txn.date = date"
+                        color="primary"
+                        flat
+                        v-close-popup
+                      />
                     </div>
                   </q-date>
                 </q-popup-proxy>
@@ -114,9 +127,10 @@
             <div class="col-12 q-pa-sm">
               <q-btn
                 :loading="loading"
-                @click="createTxn"
+                :disable="!valid"
                 class="float-right bg-accent"
                 :label="$t('add-to-list')"
+                @click="createTxn"
               />
             </div>
           </div>
@@ -133,6 +147,7 @@
                   :disable="tableActionOn"
                   size="sm"
                   round
+                  flat
                   color="negative"
                   icon="delete"
                   @click="
@@ -145,6 +160,7 @@
                   :disable="tableActionOn"
                   size="sm"
                   round
+                  flat
                   color="positive"
                   icon="done"
                   @click="
@@ -179,10 +195,13 @@ export default {
       tableActionOn: false,
       loading: false,
       dealers: [],
-      dealer: null,
-      amount: 0,
-      mr_no: "",
-      summary: "",
+      txn: {
+        dealer: null,
+        amount: 0,
+        mr_no: "",
+        summary: "",
+        date: this.$moment().format("YYYY-MM-DD")
+      },
       date: this.$moment().format("YYYY-MM-DD"),
       transactions: [],
       confirmedHeaders: [
@@ -233,6 +252,10 @@ export default {
       else if (em.post === "director")
         return { officer: { md: em.id }, confirmed: true };
       return {};
+    },
+    valid() {
+      const { dealer, amount, mr_no } = this.txn;
+      return dealer?.id && amount && mr_no;
     },
     post() {
       return this.$store.getters["user/em"].post;
@@ -320,10 +343,16 @@ export default {
     },
     createTxn: async function() {
       this.loading = true;
-      const { dealer, amount, summary, mr_no, date } = this;
       try {
-        if (!dealer || !amount || !mr_no) throw new Error("Incomplete Input");
-        const resp = await this.$apollo.mutate({
+        if (!this.valid) throw new Error("Incomplete Input");
+        const { dealer, amount, mr_no, summary } = this.txn;
+
+        const currentDate = new Date();
+        const date = new Date(this.txn.date);
+        date.setMinutes(currentDate.getMinutes());
+        date.setHours(currentDate.getHours());
+
+        const { data } = await this.$apollo.mutate({
           mutation: gql`
             mutation createTxn($data: TransactionInput!) {
               createTransaction(input: { data: $data }) {
@@ -357,7 +386,14 @@ export default {
             }
           }
         });
-        this.transactions.push(resp.data.createTransaction.transaction);
+        this.transactions.push(data.createTransaction.transaction);
+        this.txn = {
+          dealer: null,
+          amount: 0,
+          mr_no: "",
+          summary: "",
+          date: this.$moment().format("YYYY-MM-DD")
+        };
       } catch (error) {
         this.$showError(error);
       }
