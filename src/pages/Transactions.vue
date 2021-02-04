@@ -254,8 +254,8 @@ export default {
       return {};
     },
     valid() {
-      const { dealer, amount, mr_no } = this.txn;
-      return dealer?.id && amount && mr_no;
+      const { dealer, amount, mr_no, date } = this.txn;
+      return dealer?.id && amount && mr_no && date;
     },
     post() {
       return this.$store.getters["user/em"].post;
@@ -387,13 +387,15 @@ export default {
           }
         });
         this.transactions.push(data.createTransaction.transaction);
+        const newDate = this.$moment().format("YYYY-MM-DD");
         this.txn = {
           dealer: null,
           amount: 0,
           mr_no: "",
           summary: "",
-          date: this.$moment().format("YYYY-MM-DD")
+          date: newDate
         };
+        this.date = newDate;
       } catch (error) {
         this.$showError(error);
       }

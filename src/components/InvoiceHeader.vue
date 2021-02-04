@@ -3,8 +3,9 @@
     <div class="col-6">
       <table class="q-mb-md" style="text-align:left;">
         <tr>
-          <td>{{ invoice.confirmed ? "Invoice" : "Order" }} No.</td>
-          <th>:&nbsp;{{ invoice.index }}</th>
+          <th colspan="2">
+            {{ invoice.confirmed ? "Invoice" : "Order" }} #{{ invoice.index }}
+          </th>
         </tr>
         <tr>
           <td style="vertical-align:top;">{{ $t("dealer") }}</td>

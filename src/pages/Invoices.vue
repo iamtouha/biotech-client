@@ -72,6 +72,7 @@
             :title="$t('orders')"
             class="no-shadow"
             :loading="$apollo.loading"
+            :rows-per-page-options="[10, 20, 0]"
             :columns="orderColumns"
             :data="pendingInv"
             @row-click="openInv"

@@ -119,7 +119,8 @@
               >{{ $t("credit") }} {{ $n(summary.credit) }}{{ $t("tk") }}
             </q-th>
             <q-th>
-              = {{ $n(summary.cash + summary.credit) }}{{ $t("tk") }}
+              {{ $t("invoice") }} {{ $t("total") }} =
+              {{ $n(summary.cash + summary.credit) }}{{ $t("tk") }}
             </q-th>
           </q-tr>
 
@@ -140,12 +141,12 @@
             post === 'area_manager' ||
               (post === 'officer' && invoice && !invoice.confirmed)
           "
-          :disable="loading"
+          :loading="loading"
           class="on-left"
           flat
           color="negative"
           :label="$t('delete')"
-          @click="confirmDialog($t('delete-order?'), dltInvoice)"
+          @click="deleteDialog"
         />
         <q-btn
           v-if="post === 'area_manager' && editable"
@@ -153,7 +154,7 @@
           :disable="invoice && !invoice.items.length"
           color="accent"
           :label="$t('confirm')"
-          @click="confirmDialog($t('approve-order?'), confirmInvoice, true)"
+          @click="confirmDialog"
         />
       </div>
       <div class="row print-only signature-area">
@@ -377,21 +378,28 @@ export default {
       }
       this.tableActionOn = false;
     },
-    confirmDialog(message, callback, redirect = false) {
+    confirmDialog() {
       this.$q
         .dialog({
           title: this.$t("confirm"),
-          message,
+          message: this.$t("approve-order?"),
           cancel: true
         })
         .onOk(v => {
-          if (redirect) {
-            callback().then(() => {
-              this.$router.push("/invoices");
-            });
-          } else {
-            callback();
-          }
+          this.confirmInvoice();
+        });
+    },
+    deleteDialog() {
+      this.$q
+        .dialog({
+          title: this.$t("confirm"),
+          message: this.$t("delete-order?"),
+          cancel: true
+        })
+        .onOk(() => {
+          this.dltInvoice().then(() => {
+            this.$router.push("/invoices");
+          });
         });
     },
     async confirmInvoice() {
@@ -414,13 +422,13 @@ export default {
             data: payload
           }
         });
-        this.invoice = date.updateInvoice.invoice;
+        this.invoice = data.updateInvoice.invoice;
       } catch (error) {
         this.$showError(error);
       }
       this.loading = false;
     },
-    dltInvoice: async function() {
+    async dltInvoice() {
       try {
         this.loading = true;
         await this.$apollo.mutate({
