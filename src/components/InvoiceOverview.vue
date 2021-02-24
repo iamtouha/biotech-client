@@ -8,13 +8,13 @@
       ></q-circular-progress>
     </q-td>
     <q-td colspan="2">
-      {{ $t("total-cash") }} = {{ $n(overview.cash_total) + $t("tk") }}
+      {{ $t("total-cash") }} {{ $n(overview.cash_total) + $t("tk") }}
     </q-td>
     <q-td>
-      {{ $t("total-credit") }} = {{ $n(overview.credit_total) + $t("tk") }}
+      {{ $t("total-credit") }} {{ $n(overview.credit_total) + $t("tk") }}
     </q-td>
     <q-td>
-      {{ this.$t("subtotal") }} =
+      {{ this.$t("total") }}
       {{ $n(overview.cash_total + overview.credit_total) + $t("tk") }}
     </q-td>
   </q-tr>

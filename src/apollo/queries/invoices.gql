@@ -1,5 +1,5 @@
 query Invoices($data: JSON!) {
-  invoices(where: $data) {
+  invoices(where: $data, sort: "confirmed_at:DESC", limit: -1) {
     id
     index
     confirmed
@@ -15,6 +15,14 @@ query Invoices($data: JSON!) {
     officer {
       id
       name
+      am {
+        id
+        name
+      }
+      rsm {
+        id
+        name
+      }
     }
   }
 }

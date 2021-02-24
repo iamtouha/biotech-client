@@ -4,6 +4,7 @@ import HomePage from "pages/Home.vue";
 import Products from "pages/Products.vue";
 import Product from "pages/Product.vue";
 import Invoices from "pages/Invoices.vue";
+import Orders from "pages/Orders.vue";
 import Transactions from "pages/Transactions.vue";
 import Dealers from "pages/Dealers.vue";
 import Invoice from "pages/Invoice.vue";
@@ -45,6 +46,14 @@ const routes = [
         path: "invoices",
         name: "Invoices",
         component: Invoices,
+        meta: {
+          auth: true
+        }
+      },
+      {
+        path: "orders",
+        name: "Orders",
+        component: Orders,
         meta: {
           auth: true
         }

@@ -1,203 +1,210 @@
 <template>
-  <q-page>
-    <div class="q-px-md q-pa-sm">
-      <q-tabs align="left" class="print-hide" v-model="tab">
-        <q-tab
-          name="orders"
-          :label="`${$t('orders')} (${pendingInv.length})`"
-        />
-        <q-tab name="invoices" :label="$t('invoices')" />
-      </q-tabs>
-
-      <q-tab-panels v-model="tab">
-        <q-tab-panel name="invoices">
-          <q-table
-            class="no-shadow"
-            dense
-            :fullscreen.sync="fullscreen"
-            :loading="$apollo.loading"
-            :title="$t('invoices')"
-            :columns="invColumns"
-            :style="{ height: fullscreen ? '100vh' : 'calc(100vh - 180px)' }"
-            :data="confirmedInv"
-            virtual-scroll
-            :rows-per-page-options="[0]"
-            @row-click="openInv"
-          >
-            <template v-slot:top-right>
-              <q-btn
-                size="sm"
-                color="primary"
-                :icon="fullscreen ? 'close_fullscreen' : 'open_in_full'"
-                @click="fullscreen = !fullscreen"
-              ></q-btn>
-              <q-btn
-                size="sm"
-                color="primary"
-                class="q-ml-sm"
-                icon="archive"
-                no-caps
-              >
-                <q-menu>
-                  <q-list style="min-width:130px;">
-                    <q-item @click="exportTable" clickable>
-                      <q-item-section>Export to csv</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
-              </q-btn>
-            </template>
-          </q-table>
-        </q-tab-panel>
-        <q-tab-panel name="orders">
-          <div v-if="post === 'officer'" class="q-pa-md d-flex newInvInit">
-            <q-select
-              filled
-              style="min-width:270px;"
-              :options="dealers"
-              v-model="dealer"
-              option-label="name"
-              :label="$t('select-dealer')"
-            ></q-select>
-            <q-btn
-              :disable="!dealer"
-              :loading="newInvLoading"
-              @click="createInvoice"
-              color="primary"
-              class="q-ml-sm"
-              icon-right="note_add"
-            />
-          </div>
-          <q-table
-            :title="$t('orders')"
-            class="no-shadow"
-            :loading="$apollo.loading"
-            :rows-per-page-options="[10, 20, 0]"
-            :columns="orderColumns"
-            :data="pendingInv"
-            @row-click="openInv"
-          >
-          </q-table>
-        </q-tab-panel>
-      </q-tab-panels>
-    </div>
+  <q-page class="container">
+    <filter-panel
+      ref="filterPanel"
+      :loading="loading"
+      @run-query="reloadInvoices"
+      @refresh="refreshData"
+      @filter-items="setFilter"
+    >
+    </filter-panel>
+    <q-table
+      class="no-shadow"
+      dense
+      :fullscreen.sync="fullscreen"
+      :loading="$apollo.loading"
+      :title="$t('invoices')"
+      :columns="invColumns"
+      :data="filter"
+      virtual-scroll
+      :rows-per-page-options="[10, 20, 40, 0]"
+      @row-click="openInv"
+    >
+      <template v-slot:top-right>
+        <q-btn
+          size="sm"
+          color="primary"
+          :icon="fullscreen ? 'close_fullscreen' : 'open_in_full'"
+          @click="fullscreen = !fullscreen"
+        ></q-btn>
+        <q-btn size="sm" color="primary" class="q-ml-sm" icon="archive" no-caps>
+          <q-menu>
+            <q-list style="min-width:130px;">
+              <q-item @click="exportTable" clickable>
+                <q-item-section>Export to csv</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </template>
+      <template v-slot:bottom-row>
+        <q-tr>
+          <q-th colspan="2"></q-th>
+          <q-th class="text-right">{{ $n(count.cash) }}{{ $t("tk") }}</q-th>
+          <q-th class="text-right">{{ $n(count.credit) }}{{ $t("tk") }}</q-th>
+          <q-th class="text-right">
+            Total {{ $n(count.cash + count.credit) }}{{ $t("tk") }}
+          </q-th>
+          <q-th></q-th>
+        </q-tr>
+      </template>
+    </q-table>
   </q-page>
 </template>
 
 <script>
-import gql from "graphql-tag";
 import { exportFile } from "quasar";
 import Invoices from "src/apollo/queries/invoices.gql";
-import Dealers from "src/apollo/queries/dealers.gql";
+import FilterPanel from "components/FilterPanel";
 
 export default {
   name: "Invoices",
+  components: {
+    FilterPanel
+  },
   data() {
+    const variables = this.getVariables();
     return {
       tab: "orders",
       fullscreen: false,
-      newInvLoading: false,
+      loading: false,
       invoices: [],
       dealers: [],
       dealer: null,
+      variables,
+      filterParams: {
+        field: "dealer",
+        values: []
+      },
       invColumns: [
-        { label: "#", field: "index" },
         {
+          name: "index",
+          sortable: true,
+          label: "#",
+          field: "index"
+        },
+        {
+          name: "dealer",
           label: this.$t("dealer"),
           field: row => row.dealer.name,
-          align: "left"
+          align: "left",
+          sortable: true
         },
         {
+          name: "cash",
+          sortable: true,
+          sort: (a, b, rA, rB) => rA.cash_total - rB.cash_total,
           label: this.$t("total-cash"),
-          field: v => `${this.$n(v.cash_total)}${this.$t("tk")}`
+          field: v => this.$n(v.cash_total)
         },
         {
+          name: "credit",
+          sortable: true,
+          sort: (a, b, rA, rB) => rA.credit_total - rB.credit_total,
           label: this.$t("total-credit"),
-          field: v => `${this.$n(v.credit_total)}${this.$t("tk")}`
+          field: v => this.$n(v.credit_total)
         },
         {
+          name: "date",
+          sortable: true,
+          sort: (a, b, rA, rB) => {
+            const d1 = new Date(rA.confirmed_at).getTime();
+            const d2 = new Date(rB.confirmed_at).getTime();
+            return d1 - d2;
+          },
           label: this.$t("date"),
           field: row => this.$dt(row.confirmed_at, this.$i18n.locale)
         },
-        { label: this.$t("officer"), field: row => row.officer.name }
-      ],
-      orderColumns: [
-        { label: "#", field: "index" },
         {
-          label: this.$t("dealer"),
-          field: row => row.dealer.name,
-          align: "left"
-        },
-        {
-          label: this.$t("order-date"),
-          field: row => this.$dt(row.createdAt, this.$i18n.locale)
-        },
-        { label: this.$t("officer"), field: row => row.officer.name }
+          name: "officer",
+          sortable: true,
+          label: this.$t("officer"),
+          field: row => row.officer.name
+        }
       ]
     };
   },
-  apollo: {
-    invoices: {
-      query: Invoices,
-      fetchPolicy: "network-only",
-      variables() {
-        return {
-          data: this.variables
-        };
-      },
-      error(error) {
-        this.$showError(error);
-      }
-    },
-    dealers: {
-      query: Dealers,
-      fetchPolicy: "network-only",
-      variables() {
-        return {
-          data: this.variables
-        };
-      },
-      error(error) {
-        this.$showError(error);
-      }
-    }
-  },
+
   computed: {
     post() {
       return this.$store.getters["user/em"].post;
     },
-    confirmedInv() {
-      return this.invoices.filter(inv => inv.confirmed === true);
+    count() {
+      return this.filter.reduce(
+        (acc, inv) => {
+          acc.cash += inv.cash_total;
+          acc.credit += inv.credit_total;
+          return acc;
+        },
+        { cash: 0, credit: 0 }
+      );
     },
-    pendingInv() {
-      return this.invoices.filter(inv => inv.confirmed === false);
-    },
-    variables() {
-      const em = this.$store.getters["user/em"];
-      if (em.post === "officer") return { officer: em.id };
-      else if (em.post === "area_manager") return { officer: { am: em.id } };
-      else if (em.post === "regional_sales_manager")
-        return { officer: { rsm: em.id }, confirmed: true };
-      else if (em.post === "director")
-        return { officer: { md: em.id }, confirmed: true };
-      return {};
+    filter() {
+      const { field, values } = this.filterParams;
+      if (!field || !values.length) return this.invoices;
+      if (field === "dealer") {
+        return this.invoices.filter(inv => values.includes(inv.dealer.id));
+      } else if (field === "officer") {
+        return this.invoices.filter(inv => values.includes(inv.officer.id));
+      } else if (field === "area_manager") {
+        return this.invoices.filter(inv => values.includes(inv.officer.am.id));
+      } else if (field === "regional_sales_manager") {
+        return this.invoices.filter(inv => values.includes(inv.officer.rsm.id));
+      }
+      return [];
     }
   },
-  created() {
-    if (!["area_manager", "officer"].includes(this.post)) {
-      this.tab = "invoices";
+  apollo: {
+    invoices: {
+      query: Invoices,
+      variables() {
+        return { data: this.variables };
+      },
+      error(error) {
+        this.$showError(error);
+      }
     }
   },
+
   methods: {
+    reloadInvoices() {
+      this.variables = this.getVariables();
+    },
+    refreshData() {
+      this.$apollo.queries.invoices?.refresh();
+    },
+    setFilter(val) {
+      this.filterParams = val;
+    },
+    getVariables() {
+      const range = this.$refs.filterPanel?.dateRange();
+      const date1 = new Date();
+      const date2 = new Date();
+      date1.setDate(1);
+      date2.setHours(23, 59, 59);
+
+      const variables = {
+        confirmed_at_gte: range?.from || date1,
+        confirmed_at_lte: range?.to || date2,
+        confirmed: true
+      };
+      const em = this.$store.getters["user/em"];
+      if (em.post === "officer") variables.officer = em.id;
+      else if (em.post === "area_manager") variables.officer = { am: em.id };
+      else if (em.post === "regional_sales_manager")
+        variables.officer = { rsm: em.id };
+      else if (em.post === "director") variables.officer = { md: em.id };
+      return variables;
+    },
     openInv(_, row) {
       this.$router.push("/invoices/" + row.id);
     },
     exportTable() {
       // naive encoding to csv format
-      const content = [this.columns.map(col => wrapCsvValue(col.label))]
+      const content = [this.invColumns.map(col => wrapCsvValue(col.label))]
         .concat(
-          this.confirmedInv.map(row =>
-            this.columns
+          this.invoices.map(row =>
+            this.invColumns
               .map(col =>
                 wrapCsvValue(
                   typeof col.field === "function"
@@ -220,33 +227,6 @@ export default {
           icon: "warning"
         });
       }
-    },
-    createInvoice: async function() {
-      this.newInvLoading = true;
-      try {
-        const response = await this.$apollo.mutate({
-          mutation: gql`
-            mutation($dealer: ID!, $officer: ID!) {
-              createInvoice(
-                input: { data: { dealer: $dealer, officer: $officer } }
-              ) {
-                invoice {
-                  id
-                }
-              }
-            }
-          `,
-          variables: {
-            dealer: this.dealer.id,
-            officer: this.$store.getters["user/em"].id
-          }
-        });
-        const id = response.data.createInvoice.invoice.id;
-        this.$router.push("/invoices/" + id);
-      } catch (error) {
-        this.$showError(error);
-      }
-      this.newInvLoading = false;
     }
   }
 };

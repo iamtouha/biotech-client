@@ -11,11 +11,19 @@
       </q-tabs>
       <q-tab-panels v-model="tab">
         <q-tab-panel name="confirmed">
+          <filter-panel
+            ref="filterPanelTxn"
+            @run-query="reloadTxns"
+            @filter-items="setFilter"
+          >
+          </filter-panel>
           <q-table
             dense
             class="no-shadow"
             :loading="$apollo.loading"
-            :data="confirmedTxns"
+            :rows-per-page-options="[6, 20, 40, 0]"
+            :fullscreen.sync="fullscreen"
+            :data="filter"
             :columns="confirmedHeaders"
             title="Confirmed Transactions"
           >
@@ -58,6 +66,15 @@
                 ></q-btn>
                 <span v-else>-</span>
               </td>
+            </template>
+            <template v-slot:bottom-row>
+              <q-tr>
+                <q-th colspan="2"></q-th>
+                <q-th class="text-right">
+                  Total {{ $n(count) }}{{ $t("tk") }}
+                </q-th>
+                <q-th></q-th>
+              </q-tr>
             </template>
           </q-table>
         </q-tab-panel>
@@ -137,6 +154,7 @@
           <q-table
             :loading="$apollo.loading"
             class="no-shadow"
+            :rows-per-page-options="[10, 20, 40, 0]"
             color="q-ml-sm"
             :data="pendingTxns"
             :columns="pendingHeaders"
@@ -185,15 +203,27 @@ import gql from "graphql-tag";
 import { exportFile } from "quasar";
 import Dealers from "src/apollo/queries/dealers.gql";
 import Transactions from "src/apollo/queries/txns.gql";
+import FilterPanel from "components/FilterPanel";
 
 export default {
   name: "Transactions",
+  components: {
+    FilterPanel
+  },
   data() {
+    const vars = this.getVariables();
     return {
       tab: "pending",
       fullscreen: false,
       tableActionOn: false,
       loading: false,
+
+      txnVars: vars,
+      filterParams: {
+        field: "dealer",
+        values: []
+      },
+
       dealers: [],
       txn: {
         dealer: null,
@@ -206,14 +236,30 @@ export default {
       transactions: [],
       confirmedHeaders: [
         { label: this.$t("receipt_no"), field: "mr_no" },
-        { label: this.$t("dealer"), field: v => v.dealer.name, align: "left" },
         {
+          name: "dealer",
+          sortable: true,
+          label: this.$t("dealer"),
+          field: v => v.dealer.name,
+          align: "left"
+        },
+        {
+          name: "amount",
+          sortable: true,
+          sort: (a, b, rA, rB) => rA.amount - rB.amount,
           label: this.$t("amount"),
-          field: v => `${this.$n(v.amount)}${this.$t("tk")}`
+          field: v => this.$n(v.amount)
         },
         { label: this.$t("summary"), field: "summary", align: "left" },
         { label: this.$t("officer"), field: v => v.officer.name },
         {
+          name: "date",
+          sortable: true,
+          sort: (a, b, rA, rB) => {
+            const d1 = new Date(rA.date).getTime();
+            const d2 = new Date(rB.date).getTime();
+            return d1 - d2;
+          },
           label: this.$t("date"),
           field: v => this.$dt(v.date, this.$i18n.locale)
         },
@@ -224,7 +270,7 @@ export default {
         { label: this.$t("dealer"), field: v => v.dealer.name, align: "left" },
         {
           label: this.$t("amount"),
-          field: v => `${this.$n(v.amount)}${this.$t("tk")}`
+          field: v => this.$n(v.amount)
         },
         { label: this.$t("summary"), field: "summary", align: "left" },
         { label: this.$t("officer"), field: v => v.officer.name },
@@ -237,9 +283,6 @@ export default {
     };
   },
   computed: {
-    confirmedTxns() {
-      return this.transactions.filter(txn => txn.confirmed);
-    },
     pendingTxns() {
       return this.transactions.filter(txn => !txn.confirmed);
     },
@@ -253,6 +296,27 @@ export default {
         return { officer: { md: em.id }, confirmed: true };
       return {};
     },
+    count() {
+      return this.filter.reduce((acc, txn) => {
+        acc += txn.amount;
+        return acc;
+      }, 0);
+    },
+    filter() {
+      const txns = this.transactions.filter(txn => txn.confirmed);
+      const { field, values } = this.filterParams;
+      if (!field || !values.length) return txns;
+      if (field === "dealer") {
+        return txns.filter(inv => values.includes(inv.dealer.id));
+      } else if (field === "officer") {
+        return txns.filter(inv => values.includes(inv.officer.id));
+      } else if (field === "area_manager") {
+        return txns.filter(inv => values.includes(inv.officer.am.id));
+      } else if (field === "regional_sales_manager") {
+        return txns.filter(inv => values.includes(inv.officer.rsm.id));
+      }
+      return [];
+    },
     valid() {
       const { dealer, amount, mr_no, date } = this.txn;
       return dealer?.id && amount && mr_no && date;
@@ -263,12 +327,10 @@ export default {
   },
   apollo: {
     transactions: {
-      fetchPolicy: "network-only",
+      fetchPolicy: "network-first",
       query: Transactions,
       variables() {
-        return {
-          data: this.variables
-        };
+        return { data: this.txnVars };
       },
       error(error) {
         this.$showError(error);
@@ -287,6 +349,32 @@ export default {
     }
   },
   methods: {
+    getVariables() {
+      const range = this.$refs.filterPanelTxn?.dateRange();
+      const date1 = new Date();
+      const date2 = new Date();
+      date1.setDate(1);
+      date2.setHours(23, 59, 59);
+
+      const variables = {
+        date_gte: range?.from || date1,
+        date_lte: range?.to || date2,
+        confirmed: true
+      };
+      const em = this.$store.getters["user/em"];
+      if (em.post === "officer") variables.officer = em.id;
+      else if (em.post === "area_manager") variables.officer = { am: em.id };
+      else if (em.post === "regional_sales_manager")
+        variables.officer = { rsm: em.id };
+      else if (em.post === "director") variables.officer = { md: em.id };
+      return variables;
+    },
+    reloadTxns() {
+      this.txnVars = this.getVariables();
+    },
+    setFilter(val) {
+      this.filterParams = val;
+    },
     delTxn(id) {
       this.tableActionOn = true;
       this.$apollo
@@ -416,7 +504,7 @@ export default {
       // naive encoding to csv format
       const content = [this.columns.map(col => wrapCsvValue(col.label))]
         .concat(
-          this.confirmedTxns.map(row =>
+          this.filter.map(row =>
             this.columns
               .map(col =>
                 wrapCsvValue(

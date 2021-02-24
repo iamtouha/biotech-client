@@ -3,16 +3,10 @@
     <q-card style="width:100%; max-width:500px;">
       <q-card-section>
         <h5 class="text-h5 q-my-sm">Log In</h5>
-        <q-input
-          v-model="input.identifier"
-          clearable
-          autofocus
-          label="Email or username"
-        />
+        <q-input v-model="input.identifier" label="Email or username" />
         <q-input
           tabindex="0"
           v-model="input.password"
-          clearable
           :type="isPwd ? 'text' : 'password'"
           label="Password"
         >
@@ -40,7 +34,6 @@
 </template>
 
 <script>
-import gql from "graphql-tag";
 import Login from "src/apollo/mutations/login.gql";
 import Employee from "src/apollo/queries/employee.gql";
 

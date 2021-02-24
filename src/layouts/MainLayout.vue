@@ -63,7 +63,7 @@
         </q-item-section>
       </q-item>
 
-      <q-list class="q-mt-md" separator>
+      <q-list dense class="q-mt-md" separator>
         <q-item
           exact
           exact-active-class="active-state"
@@ -116,6 +116,7 @@ import Logo from "components/Logo";
 const linksData = [
   { name: "home", path: "/", icon: "home" },
   { name: "products", path: "/products", icon: "grass" },
+  { name: "orders", path: "/orders", icon: "receipt" },
   { name: "invoices", path: "/invoices", icon: "receipt_long" },
   { name: "transactions", path: "/txns", icon: "request_quote" },
   { name: "dealers", path: "/dealers", icon: "store" }

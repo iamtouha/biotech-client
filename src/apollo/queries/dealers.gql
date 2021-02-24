@@ -1,5 +1,5 @@
 query($data: JSON!) {
-  dealers(where: $data) {
+  dealers(where: $data, limit: -1) {
     name
     id
     index

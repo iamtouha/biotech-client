@@ -1,5 +1,5 @@
 query Transactions($data: JSON!) {
-  transactions(where: $data) {
+  transactions(where: $data, sort: "date:DESC") {
     id
     amount
     mr_no
@@ -11,6 +11,14 @@ query Transactions($data: JSON!) {
     officer {
       id
       name
+      am {
+        id
+        name
+      }
+      rsm {
+        id
+        name
+      }
     }
     summary
     confirmed

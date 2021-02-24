@@ -119,7 +119,7 @@
               >{{ $t("credit") }} {{ $n(summary.credit) }}{{ $t("tk") }}
             </q-th>
             <q-th>
-              {{ $t("invoice") }} {{ $t("total") }} =
+              {{ $t("invoice") }} {{ $t("total") }}
               {{ $n(summary.cash + summary.credit) }}{{ $t("tk") }}
             </q-th>
           </q-tr>
@@ -211,7 +211,12 @@ export default {
           align: "left",
           field: v => v.pack.size
         },
-        { label: this.$t("units"), field: v => this.$n(v.units) },
+        {
+          name: "units",
+          sortable: true,
+          label: this.$t("units"),
+          field: v => this.$n(v.units)
+        },
         {
           label: this.$t("rate"),
           field: v => this.$n(v.rate)
@@ -224,12 +229,20 @@ export default {
           label: this.$t("credit"),
           field: v => this.$n(v.type === "credit" ? v.rate * v.units : 0)
         },
-
         { label: this.$t("actions"), name: "actions", field: "actions" }
       ]
     };
   },
   computed: {
+    variables() {
+      const em = this.$store.getters["user/em"];
+      if (em.post === "officer") return { officer: em.id };
+      else if (em.post === "area_manager") return { officer: { am: em.id } };
+      else if (em.post === "regional_sales_manager")
+        return { officer: { rsm: em.id } };
+      else if (em.post === "director") return { officer: { md: em.id } };
+      return {};
+    },
     summary() {
       if (!this.invoice) return { cash: 0, credit: 0, units: 0 };
       const sum = this.invoice.items.reduce(
